@@ -1,6 +1,7 @@
 from enum import Enum
 from hashlib import sha1
 from typing import Optional
+
 from pydantic import BaseModel, Field, model_validator
 
 SCHEMA_VERSION = "1.0.0"
@@ -56,9 +57,7 @@ class VTKDocRecord(BaseModel):
         if isinstance(data, dict):
             # role: accept old string values not in the enum by mapping to UNKNOWN
             role_val = data.get("role", "")
-            if isinstance(role_val, str) and role_val and role_val not in {
-                r.value for r in VTKRole
-            }:
+            if isinstance(role_val, str) and role_val and role_val not in {r.value for r in VTKRole}:
                 data["role"] = VTKRole.UNKNOWN.value
 
             # methods: populate from structured_docs if not supplied
@@ -70,17 +69,17 @@ class VTKDocRecord(BaseModel):
                     if isinstance(section_methods, dict):
                         for m_name, m_body in section_methods.get("methods", {}).items():
                             sig, _, doc = m_body.partition("\n\n")
-                            methods.append({
-                                "name": m_name,
-                                "signatures": [sig.strip()] if sig.strip() else [],
-                                "doc": doc.strip(),
-                            })
+                            methods.append(
+                                {
+                                    "name": m_name,
+                                    "signatures": [sig.strip()] if sig.strip() else [],
+                                    "doc": doc.strip(),
+                                }
+                            )
                 data["methods"] = methods
 
             # content_hash: compute from class_name if missing
             if not data.get("content_hash"):
-                data["content_hash"] = sha1(
-                    data.get("class_name", "").encode()
-                ).hexdigest()
+                data["content_hash"] = sha1(data.get("class_name", "").encode()).hexdigest()
 
         return data

@@ -1,13 +1,9 @@
 """Tests for vtk_knowledge.index.api_index."""
 
-import json
-import tempfile
-from pathlib import Path
-
 import pytest
 
 from vtk_knowledge.index.api_index import VTKAPIIndex
-from vtk_knowledge.schema.records import VTKDocRecord, VTKMethod, VTKRole
+from vtk_knowledge.schema.records import VTKDocRecord, VTKMethod
 
 
 def _make_record(
@@ -125,9 +121,7 @@ class TestCoreQueryAPI:
         assert small_index.get_method("vtkMissing", "GetBounds") is None
 
     def test_get_method_info_alias(self, small_index):
-        assert small_index.get_method_info("vtkActor", "GetBounds") is small_index.get_method(
-            "vtkActor", "GetBounds"
-        )
+        assert small_index.get_method_info("vtkActor", "GetBounds") is small_index.get_method("vtkActor", "GetBounds")
 
     def test_search_classes_match(self, small_index):
         results = small_index.search_classes("Actor")
@@ -160,9 +154,7 @@ class TestCoreQueryAPI:
         assert small_index.classes_in_module("vtkNoSuchModule") == []
 
     def test_get_module_classes_alias(self, small_index):
-        assert small_index.get_module_classes("vtkRenderingCore") == small_index.classes_in_module(
-            "vtkRenderingCore"
-        )
+        assert small_index.get_module_classes("vtkRenderingCore") == small_index.classes_in_module("vtkRenderingCore")
 
 
 class TestConvenienceAccessors:

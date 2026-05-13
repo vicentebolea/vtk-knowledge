@@ -1,9 +1,6 @@
 """Tests for vtk_knowledge.schema.records."""
 
-import json
 from hashlib import sha1
-
-import pytest
 
 from vtk_knowledge.schema.records import (
     SCHEMA_VERSION,

@@ -33,6 +33,7 @@ class TestIsEnriched:
 class TestEnrichRecords:
     def test_raises_without_model(self):
         import os
+
         env_backup = os.environ.pop("LLM_MODEL", None)
         try:
             with pytest.raises(ValueError, match="LLM model not specified"):

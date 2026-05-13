@@ -1,6 +1,5 @@
 """In-memory query interface over a vtk-knowledge JSONL artifact."""
 
-import json
 import logging
 from pathlib import Path
 from typing import Optional
@@ -37,6 +36,7 @@ class VTKAPIIndex:
     @classmethod
     def from_artifact(cls, vtk_version: str) -> "VTKAPIIndex":
         from ..artifact.fetcher import fetch_knowledge_artifact
+
         return cls.from_jsonl(fetch_knowledge_artifact(vtk_version))
 
     # ------------------------------------------------------------------
@@ -71,9 +71,7 @@ class VTKAPIIndex:
 
     def search_classes(self, query: str, limit: int = 10) -> list[VTKDocRecord]:
         query_lower = query.lower()
-        results = [
-            r for name, r in self.classes.items() if query_lower in name.lower()
-        ]
+        results = [r for name, r in self.classes.items() if query_lower in name.lower()]
         return results[:limit]
 
     def is_module(self, module_name: str) -> bool:

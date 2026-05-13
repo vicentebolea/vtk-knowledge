@@ -1,0 +1,51 @@
+name: Build Knowledge Artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "LiteLLM model identifier (e.g. openai/gpt-4o, anthropic/claude-3-5-sonnet-20241022)"
+        required: true
+        default: "openai/gpt-4o"
+      vtk_version:
+        description: "VTK version tag override (leave empty to auto-detect from installed VTK)"
+        required: false
+        default: ""
+
+jobs:
+  build-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install build dependencies
+        run: uv sync --extra build
+
+      - name: Build knowledge artifact
+        env:
+          MODEL: ${{ inputs.model }}
+          VTK_VERSION: ${{ inputs.vtk_version }}
+          OPENAI_API_KEY: ${{ secrets.LLM_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          extra_args=()
+          if [ -n "$VTK_VERSION" ]; then
+            extra_args+=(--vtk-version "$VTK_VERSION")
+          fi
+          uv run vtk-knowledge build \
+            --model "$MODEL" \
+            --output-dir artifacts/ \
+            "${extra_args[@]}"
+
+      - name: Upload knowledge artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vtk-knowledge-artifact
+          path: artifacts/vtk-knowledge-*.jsonl
+          if-no-files-found: error
+          retention-days: 90

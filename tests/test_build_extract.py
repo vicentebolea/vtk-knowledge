@@ -1,10 +1,6 @@
 """Tests for vtk_knowledge.build.extract (VTK-free parts)."""
 
 import json
-import tempfile
-from pathlib import Path
-
-import pytest
 
 from vtk_knowledge.build.extract import _parse_help_text, write_jsonl
 
@@ -98,7 +94,7 @@ class TestWriteJsonl:
         write_jsonl(records, out)
         lines = out.read_text().splitlines()
         assert len(lines) == 2
-        parsed = [json.loads(l) for l in lines]
+        parsed = [json.loads(line) for line in lines]
         assert parsed[0]["class_name"] == "vtkFoo"
         assert parsed[1]["class_name"] == "vtkBar"
 
