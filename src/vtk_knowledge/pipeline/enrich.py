@@ -55,6 +55,12 @@ async def _enrich_one(class_name: str, class_doc: str, model: str) -> dict[str, 
         ]
         response = await litellm.acompletion(model=model, messages=messages)
         content = response.choices[0].message.content.strip()
+        # Strip markdown fences that some models wrap around JSON
+        if content.startswith("```"):
+            content = content.split("```", 2)[1]
+            if content.startswith("json"):
+                content = content[4:]
+            content = content.strip().rstrip("`").strip()
         return json.loads(content)
     except Exception as exc:
         logger.warning("Enrichment failed for %s: %s", class_name, exc)
