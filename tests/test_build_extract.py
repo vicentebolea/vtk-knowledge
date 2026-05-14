@@ -1,8 +1,8 @@
-"""Tests for vtk_knowledge.build.extract (VTK-free parts)."""
+"""Tests for vtk_knowledge.pipeline.extract (VTK-free parts)."""
 
 import json
 
-from vtk_knowledge.build.extract import _parse_help_text, write_jsonl
+from vtk_knowledge.pipeline.extract import _parse_help_text, write_jsonl
 
 
 class TestParseHelpText:

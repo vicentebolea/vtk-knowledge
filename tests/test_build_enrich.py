@@ -1,8 +1,8 @@
-"""Tests for vtk_knowledge.build.enrich (LLM-free parts)."""
+"""Tests for vtk_knowledge.pipeline.enrich (LLM-free parts)."""
 
 import pytest
 
-from vtk_knowledge.build.enrich import _is_enriched, enrich_records
+from vtk_knowledge.pipeline.enrich import _is_enriched, enrich_records
 
 
 class TestIsEnriched:

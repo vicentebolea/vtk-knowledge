@@ -48,7 +48,7 @@ dev = [
 ]
 
 [project.scripts]
-vtk-knowledge = "vtk_knowledge.build.cli:app"
+vtk-knowledge = "vtk_knowledge.pipeline.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/vtk_knowledge"]
