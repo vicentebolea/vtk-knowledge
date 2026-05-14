@@ -39,6 +39,28 @@ class VTKAPIIndex:
 
         return cls.from_jsonl(fetch_knowledge_artifact(vtk_version))
 
+    @classmethod
+    def from_ghcr(
+        cls,
+        vtk_version: str,
+        repository: str = "vicentebolea/vtk-knowledge",
+        cache_dir: Optional[Path] = None,
+    ) -> "VTKAPIIndex":
+        """Load from a versioned OCI image on ghcr.io.
+
+        Pulls the manifest, downloads the single layer blob, and extracts
+        the JSONL without requiring docker or podman.  The result is cached
+        in ``~/.cache/vtk-knowledge/`` so subsequent calls are instant.
+
+        Args:
+            vtk_version: VTK version tag, e.g. ``"9.6.1"``.
+            repository: ghcr.io owner/name (default: ``vicentebolea/vtk-knowledge``).
+            cache_dir: Override the default cache directory (mainly for testing).
+        """
+        from ..artifact.fetcher import _CACHE_DIR, fetch_from_ghcr
+
+        return cls.from_jsonl(fetch_from_ghcr(vtk_version, repository, cache_dir or _CACHE_DIR))
+
     # ------------------------------------------------------------------
     # Core query API
     # ------------------------------------------------------------------
