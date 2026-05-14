@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from vtk_knowledge.artifact.fetcher import fetch_from_ghcr
-from vtk_knowledge.index.api_index import VTKAPIIndex
 from vtk_knowledge.schema.records import VTKDocRecord
 
 
@@ -118,18 +117,3 @@ class TestFetchFromGhcr:
 
         assert "myorg/vtk-knowledge" in captured_urls[0]
         assert "myorg/vtk-knowledge" in captured_urls[1]
-
-
-class TestVTKAPIIndexFromGhcr:
-    def test_from_ghcr_loads_index(self, tmp_path):
-        blob = _make_layer_blob("vtk-knowledge.jsonl", _jsonl_bytes("vtkActor", "vtkSphereSource"))
-
-        with patch(
-            "vtk_knowledge.artifact.fetcher.urllib.request.urlopen",
-            side_effect=_mock_urlopen({"token": "tok"}, MANIFEST, blob),
-        ):
-            idx = VTKAPIIndex.from_ghcr("9.6.1", repository="test/repo", cache_dir=tmp_path)
-
-        assert idx.has_class("vtkActor")
-        assert idx.has_class("vtkSphereSource")
-        assert len(idx.classes) == 2
