@@ -40,6 +40,58 @@ Each record (`VTKDocRecord`) covers one VTK class and contains:
 | `visibility_score` | LLM enrichment | 0–1 likelihood a user mentions this class |
 | `vtk_version`, `schema_version`, `content_hash` | metadata | versioning + integrity |
 
+## Sample records
+
+Three records from the enriched `vtk-knowledge-9.6.1.jsonl` artifact:
+
+```json
+{
+  "class_name": "vtkSphereSource",
+  "module_name": "vtkmodules.vtkFiltersSources",
+  "vtk_version": "9.6.1",
+  "role": "source",
+  "synopsis": "Create a polygonal sphere with configurable radius and resolution.",
+  "action_phrase": "sphere generation",
+  "visibility_score": 0.85,
+  "output_datatype": "vtkPolyData",
+  "inheritance": ["vtkPolyDataAlgorithm", "vtkAlgorithm", "vtkObject", "vtkObjectBase"],
+  "semantic_methods": ["GenerateNormalsOff", "GenerateNormalsOn", "GetCenter", "GetEndPhi", "..."],
+  "methods": [{ "name": "SetRadius", "doc": "Set the radius of the sphere." }, "..."]
+}
+```
+
+```json
+{
+  "class_name": "vtkContourFilter",
+  "module_name": "vtkmodules.vtkFiltersCore",
+  "vtk_version": "9.6.1",
+  "role": "filter",
+  "synopsis": "Generate isosurfaces and isolines from scalar field data.",
+  "action_phrase": "isosurface generation",
+  "visibility_score": 0.85,
+  "output_datatype": "vtkPolyData",
+  "inheritance": ["vtkPolyDataAlgorithm", "vtkAlgorithm", "vtkObject", "vtkObjectBase"],
+  "semantic_methods": ["ComputeGradientsOff", "ComputeNormalsOff", "GenerateTrianglesOff", "..."],
+  "methods": [{ "name": "SetValue", "doc": "Set a particular contour value at contour number i." }, "..."]
+}
+```
+
+```json
+{
+  "class_name": "vtkActor",
+  "module_name": "vtkmodules.vtkRenderingCore",
+  "vtk_version": "9.6.1",
+  "role": "scene",
+  "synopsis": "Represents a renderable object with geometry, properties, and transformation in a scene.",
+  "action_phrase": "scene object representation",
+  "visibility_score": 0.95,
+  "output_datatype": null,
+  "inheritance": ["vtkProp3D", "vtkProp", "vtkObject", "vtkObjectBase"],
+  "semantic_methods": ["ApplyProperties", "ForceOpaqueOff", "ForceOpaqueOn", "..."],
+  "methods": [{ "name": "GetBounds", "doc": "Return the bounds of this actor." }, "..."]
+}
+```
+
 ## Installation
 
 ```bash
