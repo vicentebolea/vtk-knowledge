@@ -23,9 +23,10 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Install dev dependencies
-        run: uv sync --extra dev
+        run: uv sync --extra dev --frozen
 
       - name: Run ruff check
         run: uv run ruff check src/ tests/
@@ -48,12 +49,13 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dev dependencies
-        run: uv sync --extra dev --python ${{ matrix.python-version }}
+        run: uv sync --extra dev --frozen --python ${{ matrix.python-version }}
 
       - name: Run tests
         run: uv run pytest tests/ -v --tb=short

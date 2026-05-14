@@ -26,9 +26,10 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Install build dependencies
-        run: uv sync --extra build
+        run: uv sync --extra build --frozen
 
       - name: Build knowledge artifact
         env:

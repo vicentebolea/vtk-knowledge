@@ -19,9 +19,28 @@ the single point of truth for the VTK API across the whole stack.
 
 ## Install
 
+With uv (recommended):
+
 ```bash
-pip install vtk-knowledge           # just the schema and index, no VTK needed
-pip install vtk-knowledge[build]    # adds extraction pipeline (needs VTK + LiteLLM)
+uv add vtk-knowledge                # schema + index, no VTK needed
+uv add "vtk-knowledge[build]"       # adds extraction pipeline (needs VTK + LiteLLM)
+```
+
+With pip:
+
+```bash
+pip install vtk-knowledge
+pip install "vtk-knowledge[build]"
+```
+
+For development:
+
+```bash
+git clone https://github.com/vicentebolea/vtk-knowledge
+cd vtk-knowledge
+uv sync --extra dev         # installs all dev deps from uv.lock
+uv run pytest               # run tests
+uv run vtk-knowledge --help # try the CLI
 ```
 
 ## Usage
