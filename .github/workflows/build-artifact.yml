@@ -55,11 +55,10 @@ jobs:
           echo "file=$file" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io \
+            --username "${{ github.actor }}" \
+            --password-stdin
 
       - name: Build and push scratch image
         env:
@@ -69,9 +68,9 @@ jobs:
         run: |
           image="ghcr.io/$(echo "$REPO" | tr '[:upper:]' '[:lower:]')"
           printf 'FROM scratch\nCOPY %s /vtk-knowledge.jsonl\n' "$FILE" > Dockerfile.artifact
-          docker build -f Dockerfile.artifact \
+          podman build -f Dockerfile.artifact \
             -t "$image:$VERSION" \
             -t "$image:latest" \
             .
-          docker push "$image:$VERSION"
-          docker push "$image:latest"
+          podman push "$image:$VERSION"
+          podman push "$image:latest"
