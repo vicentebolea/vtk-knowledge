@@ -56,8 +56,10 @@ class TestFetchKnowledgeArtifact:
         assert cache_dir.exists()
 
 
-def _layer_blob(*class_names: str) -> bytes:
-    content = "\n".join(VTKDocRecord(class_name=n, module_name="m").model_dump_json() for n in class_names).encode()
+def _layer_blob(*class_names: str, **fields) -> bytes:
+    content = "\n".join(
+        VTKDocRecord(class_name=n, module_name="m", **fields).model_dump_json() for n in class_names
+    ).encode()
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
         info = tarfile.TarInfo(name="vtk-knowledge.jsonl")
@@ -118,3 +120,47 @@ class TestFromArtifact:
             VTKAPIIndex.from_artifact("9.6.1", cache_dir=custom)
 
         assert (custom / "vtk-knowledge-9.6.1.jsonl").exists()
+
+    def test_default_cache_dir_is_home_cache(self, tmp_path):
+        from vtk_knowledge.artifact.fetcher import _CACHE_DIR
+
+        assert _CACHE_DIR == Path.home() / ".cache" / "vtk-knowledge"
+
+    def test_enriched_fields_survive_round_trip(self, tmp_path):
+        blob = _layer_blob(
+            "vtkSphereSource",
+            vtk_version="9.6.1",
+            role="source",
+            synopsis="Create a sphere.",
+            action_phrase="sphere generation",
+            visibility_score=0.85,
+        )
+        with patch(
+            "vtk_knowledge.artifact.fetcher.urllib.request.urlopen",
+            side_effect=_urlopen_side_effect(blob),
+        ):
+            idx = VTKAPIIndex.from_artifact("9.6.1", cache_dir=tmp_path)
+
+        r = idx.get_class("vtkSphereSource")
+        assert r.synopsis == "Create a sphere."
+        assert r.action_phrase == "sphere generation"
+        assert r.visibility_score == 0.85
+        assert r.role.value == "source"
+        assert idx.vtk_version == "9.6.1"
+
+    def test_second_call_returns_same_path(self, tmp_path):
+        blob = _layer_blob("vtkFoo")
+        with patch(
+            "vtk_knowledge.artifact.fetcher.urllib.request.urlopen",
+            side_effect=_urlopen_side_effect(blob),
+        ):
+            idx1 = VTKAPIIndex.from_artifact("9.6.1", cache_dir=tmp_path)
+
+        # second call — network is not available, must hit cache
+        with patch(
+            "vtk_knowledge.artifact.fetcher.urllib.request.urlopen",
+            side_effect=RuntimeError("should not be called"),
+        ):
+            idx2 = VTKAPIIndex.from_artifact("9.6.1", cache_dir=tmp_path)
+
+        assert set(idx1.classes) == set(idx2.classes)
