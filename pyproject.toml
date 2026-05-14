@@ -67,6 +67,7 @@ known-first-party = ["vtk_knowledge"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+pythonpath = ["src"]
 asyncio_mode = "auto"
 filterwarnings = [
     "ignore:enable_cleanup_closed ignored:DeprecationWarning",
