@@ -19,9 +19,28 @@ the single point of truth for the VTK API across the whole stack.
 
 ## Install
 
+With uv (recommended):
+
 ```bash
-pip install vtk-knowledge           # just the schema and index, no VTK needed
-pip install vtk-knowledge[build]    # adds extraction pipeline (needs VTK + LiteLLM)
+uv add vtk-knowledge                # schema + index, no VTK needed
+uv add "vtk-knowledge[build]"       # adds extraction pipeline (needs VTK + LiteLLM)
+```
+
+With pip:
+
+```bash
+pip install vtk-knowledge
+pip install "vtk-knowledge[build]"
+```
+
+For development:
+
+```bash
+git clone https://github.com/vicentebolea/vtk-knowledge
+cd vtk-knowledge
+uv sync --extra dev         # installs all dev deps from uv.lock
+uv run pytest               # run tests
+uv run vtk-knowledge --help # try the CLI
 ```
 
 ## Usage
@@ -29,8 +48,12 @@ pip install vtk-knowledge[build]    # adds extraction pipeline (needs VTK + Lite
 ```python
 from vtk_knowledge import VTKAPIIndex
 
-idx = VTKAPIIndex.from_artifact("9.6.1")        # downloads and caches from ghcr.io
-idx = VTKAPIIndex.from_jsonl("vtk-knowledge-9.6.1.jsonl")  # or use a local file
+# pull from ghcr.io on first call, served from cache (~/.cache/vtk-knowledge/) after that
+idx = VTKAPIIndex.from_artifact("9.6.1")
+idx = VTKAPIIndex.from_artifact("9.6.1", cache_dir="/tmp/my-cache")  # custom cache dir
+
+# load a local file directly
+idx = VTKAPIIndex.from_jsonl("vtk-knowledge-9.6.1.jsonl")
 
 r = idx.get_class("vtkSphereSource")
 print(r.synopsis)         # "Create a polygonal sphere with configurable radius and resolution."

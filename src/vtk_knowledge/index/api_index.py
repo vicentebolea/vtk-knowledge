@@ -34,10 +34,16 @@ class VTKAPIIndex:
         return cls(records)
 
     @classmethod
-    def from_artifact(cls, vtk_version: str) -> "VTKAPIIndex":
-        from ..artifact.fetcher import fetch_knowledge_artifact
+    def from_artifact(cls, vtk_version: str, cache_dir: Optional[Path] = None) -> "VTKAPIIndex":
+        """Load by version, pulling from ghcr.io on first call and serving from cache thereafter.
 
-        return cls.from_jsonl(fetch_knowledge_artifact(vtk_version))
+        Args:
+            vtk_version: VTK version tag, e.g. ``"9.6.1"``.
+            cache_dir: Local cache directory (default: ``~/.cache/vtk-knowledge/``).
+        """
+        from ..artifact.fetcher import _CACHE_DIR, fetch_from_ghcr
+
+        return cls.from_jsonl(fetch_from_ghcr(vtk_version, cache_dir=cache_dir or _CACHE_DIR))
 
     # ------------------------------------------------------------------
     # Core query API
