@@ -1,9 +1,10 @@
 """CLI for the vtk-knowledge build pipeline.
 
 Commands:
-    vtk-knowledge extract   -- VTK runtime → extracted.jsonl
-    vtk-knowledge enrich    -- extracted.jsonl + LLM → enriched.jsonl
-    vtk-knowledge build     -- convenience wrapper: extract → enrich → final artifact
+    vtk-knowledge download   -- pull a published artifact from ghcr.io
+    vtk-knowledge extract    -- VTK runtime → extracted.jsonl
+    vtk-knowledge enrich     -- extracted.jsonl + LLM → enriched.jsonl
+    vtk-knowledge build      -- convenience wrapper: extract → enrich → final artifact
 """
 
 from __future__ import annotations
@@ -20,6 +21,41 @@ app = typer.Typer(
 )
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+
+
+@app.command()
+def download(
+    vtk_version: str = typer.Argument(..., help="VTK version to download, e.g. 9.6.1"),
+    output_dir: Path = typer.Option(
+        Path("."),
+        "--output-dir",
+        "-o",
+        help="Directory to write the JSONL file into.",
+    ),
+    repository: str = typer.Option(
+        "vicentebolea/vtk-knowledge",
+        "--repository",
+        "-r",
+        help="ghcr.io owner/name to pull from.",
+    ),
+) -> None:
+    """Download a published artifact from ghcr.io (no VTK or LLM required)."""
+    import shutil
+
+    from ..artifact.fetcher import _CACHE_DIR, fetch_from_ghcr
+
+    try:
+        cached = fetch_from_ghcr(vtk_version, repository=repository)
+    except RuntimeError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(1)
+
+    dest = output_dir / cached.name
+    if dest.resolve() != cached.resolve():
+        output_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy(cached, dest)
+
+    typer.echo(f"Artifact written to {dest}  (cached at {_CACHE_DIR / cached.name})")
 
 
 @app.command()
