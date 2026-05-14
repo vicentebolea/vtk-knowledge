@@ -23,7 +23,7 @@ With uv (recommended):
 
 ```bash
 uv add vtk-knowledge                # schema + index, no VTK needed
-uv add "vtk-knowledge[build]"       # adds extraction pipeline (needs VTK + LiteLLM)
+uv add "vtk-knowledge[build]"       # adds build pipeline (needs VTK + LiteLLM)
 ```
 
 With pip:
@@ -43,52 +43,34 @@ uv run pytest               # run tests
 uv run vtk-knowledge --help # try the CLI
 ```
 
-## Usage
+## CLI
 
-```python
-from vtk_knowledge import VTKAPIIndex
-
-# pull from ghcr.io on first call, served from cache (~/.cache/vtk-knowledge/) after that
-idx = VTKAPIIndex.from_artifact("9.6.1")
-idx = VTKAPIIndex.from_artifact("9.6.1", cache_dir="/tmp/my-cache")  # custom cache dir
-
-# load a local file directly
-idx = VTKAPIIndex.from_jsonl("vtk-knowledge-9.6.1.jsonl")
-
-r = idx.get_class("vtkSphereSource")
-print(r.synopsis)         # "Create a polygonal sphere with configurable radius and resolution."
-print(r.action_phrase)    # "sphere generation"
-print(r.visibility_score) # 0.85
-print(r.role.value)       # "source"
-print(len(r.methods))     # 253
-```
-
-## Get the artifact from the OCI image
-
-After each build the JSONL is pushed as a `FROM scratch` image to ghcr.io.
-The image has one file: `/vtk-knowledge.jsonl`.
+### download -- get a published artifact (no VTK or LLM needed)
 
 ```bash
-# podman
-ctr=$(podman create ghcr.io/vicentebolea/vtk-knowledge:9.6.1 noop)
-podman cp "$ctr:/vtk-knowledge.jsonl" .
-podman rm "$ctr"
+# download 9.6.1 to the current directory
+vtk-knowledge download 9.6.1
 
-# docker
-ctr=$(docker create ghcr.io/vicentebolea/vtk-knowledge:9.6.1)
-docker cp "$ctr:/vtk-knowledge.jsonl" .
-docker rm "$ctr"
+# write to a specific directory
+vtk-knowledge download 9.6.1 -o ./artifacts/
+
+# pull from a different ghcr.io repository
+vtk-knowledge download 9.6.1 -r myorg/vtk-knowledge
 ```
 
-## Build the artifact yourself
+Pulls from `ghcr.io/{repository}:{vtk_version}` via the OCI HTTP API (no
+docker or podman required). The file is cached in `~/.cache/vtk-knowledge/`
+so repeated calls are instant.
 
-Requires `pip install vtk-knowledge[build]` and VTK installed.
+### extract, enrich, build -- produce an artifact from a local VTK install
+
+Requires `vtk-knowledge[build]` and VTK installed.
 
 ```bash
-# extract from the running VTK Python runtime
+# step 1: introspect the installed VTK runtime
 vtk-knowledge extract -o extracted.jsonl
 
-# enrich with an LLM (any LiteLLM model string works)
+# step 2: enrich with an LLM
 ANTHROPIC_API_KEY=sk-ant-... \
 vtk-knowledge enrich extracted.jsonl \
   --output enriched.jsonl \
@@ -102,8 +84,42 @@ vtk-knowledge build \
 # writes artifacts/vtk-knowledge-9.6.1.jsonl
 ```
 
-`enrich` is idempotent: records that already have `synopsis`, `action_phrase`,
-and `visibility_score` are skipped. Safe to resume after a partial run.
+`enrich` is idempotent: records that already have all three LLM fields are
+skipped, so a run can be resumed after interruption.
+
+## Python API
+
+```python
+from vtk_knowledge import VTKAPIIndex
+
+# pull from ghcr.io on first call, cache hit after that
+idx = VTKAPIIndex.from_artifact("9.6.1")
+idx = VTKAPIIndex.from_artifact("9.6.1", cache_dir="/tmp/my-cache")
+
+# or load a local file directly
+idx = VTKAPIIndex.from_jsonl("vtk-knowledge-9.6.1.jsonl")
+
+r = idx.get_class("vtkSphereSource")
+print(r.synopsis)         # "Create a polygonal sphere with configurable radius and resolution."
+print(r.action_phrase)    # "sphere generation"
+print(r.visibility_score) # 0.85
+print(r.role.value)       # "source"
+print(len(r.methods))     # 253
+```
+
+## Get the artifact from the OCI image manually
+
+```bash
+# podman
+ctr=$(podman create ghcr.io/vicentebolea/vtk-knowledge:9.6.1 noop)
+podman cp "$ctr:/vtk-knowledge.jsonl" .
+podman rm "$ctr"
+
+# docker
+ctr=$(docker create ghcr.io/vicentebolea/vtk-knowledge:9.6.1)
+docker cp "$ctr:/vtk-knowledge.jsonl" .
+docker rm "$ctr"
+```
 
 ## CI build workflow
 
@@ -113,8 +129,8 @@ and `visibility_score` are skipped. Safe to resume after a partial run.
 2. Set the model (e.g. `anthropic/claude-haiku-4-5`)
 3. Add `LLM_API_KEY` under **Settings -> Secrets and variables -> Actions**
 
-The workflow runs `vtk-knowledge build`, wraps the output in a scratch OCI image,
-and pushes to `ghcr.io/{owner}/vtk-knowledge:{vtk_version}` and `:latest`.
+The workflow runs `vtk-knowledge build`, wraps the output in a scratch OCI
+image, and pushes to `ghcr.io/{owner}/vtk-knowledge:{vtk_version}` and `:latest`.
 
 ## Code layout
 
@@ -124,8 +140,8 @@ src/vtk_knowledge/
   index/api_index.py     # VTKAPIIndex - O(1) dict lookups, single-pass load
   pipeline/extract.py    # VTK introspection (needs vtk installed)
   pipeline/enrich.py     # async LiteLLM enrichment, idempotent
-  pipeline/cli.py        # Typer CLI: extract / enrich / build
-  artifact/fetcher.py    # download versioned artifacts from GitHub Releases
+  pipeline/cli.py        # Typer CLI: download / extract / enrich / build
+  artifact/fetcher.py    # fetch_from_ghcr: OCI pull without docker/podman
 ```
 
 ## Related repos
